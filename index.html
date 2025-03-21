@@ -97,17 +97,22 @@
   <body>
     <div class="input-container">
       <h2>Subir archivo SVG</h2>
-      <label for="diagramType">Ambiente</label>
-      <select id="diagramType">
-          <option value="desarrollo">Desarrollo</option>
-          <option value="qa">QA</option>
-          <option value="produccion">Producción</option>
-      </select>
-      <br>
       <input type="file" id="fileInput" accept=".svg">
   </div>
     <div id="svgContainer"></div>
-    <button class="copy-button" id="copyButton">Copiar Macro HTML</button>
+    
+    <div id="export" style="display: none;">
+      <label for="diagramType">Ambiente</label>
+      <select id="diagramType">
+          <option value=""></option>
+          <option value="dev">Desarrollo</option>
+          <option value="qa">QA</option>
+          <option value="prod">Producción</option>
+      </select>
+      <br>
+      <button class="copy-button" id="copyButton">Exportar infra-cloud-*.html</button>
+    </div>
+    
 
     <!-- Modal para mostrar el SVG en pantalla completa -->
     <div id="modal" class="modal">
@@ -146,6 +151,7 @@
                         panzoomInstance.zoomWithWheel(event);
                     }, { passive: false });
 
+                    document.getElementById("export").style.display = "block";
 
                 };
                 reader.readAsText(file);
@@ -169,6 +175,80 @@
             if (event.target === this) {
                 this.style.display = "none";
             }
+        });
+
+        document.getElementById("copyButton").addEventListener("click", function() {
+            const svgContainer = document.getElementById("svgContainer");
+            const svgContent = svgContainer.querySelector("svg").outerHTML;
+            const html = `
+              <style>
+                #svgContainer {
+                  width: 600px;
+                  max-width: 100%;
+                  border: 1px solid #ccc;
+                  padding: 10px;
+                  background-color: white;
+                  text-align: center;
+                  display: none;
+                  cursor: pointer;
+                }
+                #svgContainer svg {
+                  width: 100%;
+                  height: auto;
+                }
+                .modal {
+                  display: none; /* Oculto por defecto */
+                  position: fixed;
+                  top: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 100%;
+                  background: rgba(0, 0, 0, 0.8);
+                  justify-content: center;
+                  align-items: center;
+                }
+                .modal-content {
+                  max-width: 90%;
+                  max-height: 90%;
+                  background: white;
+                  padding: 30px;
+                  border-radius: 10px;
+                  overflow: hidden;
+                  position: relative;
+                }
+                .modal-content svg {
+                  width: 100%;
+                  height: auto;
+                }
+                .close {
+                  position: absolute;
+                  top: 10px;
+                  right: 20px;
+                  font-size: 24px;
+                  font-weight: bold;
+                  cursor: pointer;
+                  color: black;
+                }
+              </style>
+
+              <div id="svgContainer">${svgContent}</div>
+              <div id="modal" class="modal">
+                <div class="modal-content">
+                  <span class="close">&times;</span>
+                  <div id="modalSvgContainer">${svgContent}</div>
+                </div>
+              </div>
+    
+            `;
+
+            console.log(html);
+
+
+           /* navigator.clipboard.writeText(svgContent).then(function() {
+                alert("Macro HTML copiado al portapapeles.");
+            }).catch(function() {
+                alert("Error al copiar al portapapeles.");
+            });*/
         });
 
     </script>
