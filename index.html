@@ -5,8 +5,172 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Cloudcraft SVG to HTML confluence</title>
+    <script src="https://unpkg.com/@panzoom/panzoom@4.6.0/dist/panzoom.min.js"></script>
+    <style>
+      body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+        .input-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #fileInput, #diagramType {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        #svgContainer {
+            width: 600px;
+            max-width: 100%;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: white;
+            text-align: center;
+            display: none; /* Oculto por defecto */
+            cursor: pointer;
+        }
+        #svgContainer svg {
+            width: 100%;
+            height: auto;
+        }
+
+        .copy-button {
+            margin-top: 10px;
+            padding: 8px 15px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .copy-button:hover {
+            background-color: #0056b3;
+        }
+
+
+        /* Estilos del modal */
+        .modal {
+            display: none; /* Oculto por defecto */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        .modal-content svg {
+            width: 100%;
+            height: auto;
+        }
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            color: black;
+        }
+
+  </style>
   </head>
   <body>
-    
+    <div class="input-container">
+      <h2>Subir archivo SVG</h2>
+      <label for="diagramType">Ambiente</label>
+      <select id="diagramType">
+          <option value="desarrollo">Desarrollo</option>
+          <option value="qa">QA</option>
+          <option value="produccion">Producción</option>
+      </select>
+      <br>
+      <input type="file" id="fileInput" accept=".svg">
+  </div>
+    <div id="svgContainer"></div>
+    <button class="copy-button" id="copyButton">Copiar Macro HTML</button>
+
+    <!-- Modal para mostrar el SVG en pantalla completa -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modalSvgContainer"></div>
+        </div>
+    </div>
+
+
+    <script>
+        document.getElementById("fileInput").addEventListener("change", function(event) {
+            const file = event.target.files[0];
+            const svgContainer = document.getElementById("svgContainer");
+            const modalSvgContainer = document.getElementById("modalSvgContainer");
+
+            if (file && file.type === "image/svg+xml") {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                  const svgContent = e.target.result;
+
+                    document.getElementById("svgContainer").innerHTML = svgContent;
+                    svgContainer.style.display = "block"; // Mostrar el contenedor
+                    modalSvgContainer.innerHTML = svgContent; // Cargar el SVG en el modal también
+
+                    const svgElement = modalSvgContainer.querySelector("svg");
+
+                    const panzoomInstance = Panzoom(svgElement, {
+                        maxScale: 5,
+                        minScale: 0.5,
+                        step: 0.1,
+                    });
+
+                    // Add mouse wheel zoom
+                    modalSvgContainer.addEventListener("wheel", (event) => {
+                        panzoomInstance.zoomWithWheel(event);
+                    }, { passive: false });
+
+
+                };
+                reader.readAsText(file);
+            } else {
+                alert("Por favor, selecciona un archivo SVG válido.");
+            }
+        });
+
+        // Mostrar el modal al hacer clic en el SVG
+        document.getElementById("svgContainer").addEventListener("click", function() {
+            document.getElementById("modal").style.display = "flex";
+        });
+
+        // Cerrar el modal
+        document.querySelector(".close").addEventListener("click", function() {
+            document.getElementById("modal").style.display = "none";
+        });
+
+        // Cerrar el modal si se hace clic fuera de la imagen
+        document.getElementById("modal").addEventListener("click", function(event) {
+            if (event.target === this) {
+                this.style.display = "none";
+            }
+        });
+
+    </script>
   </body>
 </html>
