@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -104,13 +104,12 @@
     <div id="export" style="display: none;">
       <label for="diagramType">Ambiente</label>
       <select id="diagramType">
-          <option value=""></option>
           <option value="dev">Desarrollo</option>
           <option value="qa">QA</option>
           <option value="prod">Producción</option>
       </select>
       <br>
-      <button class="copy-button" id="copyButton">Exportar infra-cloud-*.html</button>
+      <button class="copy-button" id="copyButton">Exportar infra-cloud-dev.html</button>
     </div>
     
 
@@ -124,6 +123,8 @@
 
 
     <script>
+        let filename = 'infra-cloud-dev.html';
+
         document.getElementById("fileInput").addEventListener("change", function(event) {
             const file = event.target.files[0];
             const svgContainer = document.getElementById("svgContainer");
@@ -141,7 +142,7 @@
                     const svgElement = modalSvgContainer.querySelector("svg");
 
                     const panzoomInstance = Panzoom(svgElement, {
-                        maxScale: 5,
+                        maxScale: 50,
                         minScale: 0.5,
                         step: 0.1,
                     });
@@ -177,27 +178,33 @@
             }
         });
 
+        document.getElementById("diagramType").addEventListener("change", function() {
+          const diagramType = document.getElementById("diagramType").value;
+          filename =  `infra-cloud-${diagramType}.html`;
+          document.getElementById("copyButton").innerText = `Exportar ${filename}`;
+        });
+
         document.getElementById("copyButton").addEventListener("click", function() {
+            const diagramType = document.getElementById("diagramType").value;
             const svgContainer = document.getElementById("svgContainer");
             const svgContent = svgContainer.querySelector("svg").outerHTML;
             const html = `
               <style>
-                #svgContainer {
+                #svgContainer_${diagramType} {
                   width: 600px;
                   max-width: 100%;
                   border: 1px solid #ccc;
                   padding: 10px;
                   background-color: white;
                   text-align: center;
-                  display: none;
                   cursor: pointer;
                 }
-                #svgContainer svg {
+                #svgContainer_${diagramType} svg {
                   width: 100%;
                   height: auto;
                 }
-                .modal {
-                  display: none; /* Oculto por defecto */
+                .modal-tbk {
+                  display: none;
                   position: fixed;
                   top: 0;
                   left: 0;
@@ -206,8 +213,9 @@
                   background: rgba(0, 0, 0, 0.8);
                   justify-content: center;
                   align-items: center;
+                  z-index: 999;
                 }
-                .modal-content {
+                .modal-content-tbk {
                   max-width: 90%;
                   max-height: 90%;
                   background: white;
@@ -216,11 +224,11 @@
                   overflow: hidden;
                   position: relative;
                 }
-                .modal-content svg {
+                .modal-content-tbk svg {
                   width: 100%;
                   height: auto;
                 }
-                .close {
+                .close-tbk-${diagramType} {
                   position: absolute;
                   top: 10px;
                   right: 20px;
@@ -231,24 +239,58 @@
                 }
               </style>
 
-              <div id="svgContainer">${svgContent}</div>
-              <div id="modal" class="modal">
-                <div class="modal-content">
-                  <span class="close">&times;</span>
-                  <div id="modalSvgContainer">${svgContent}</div>
+              <div id="svgContainer_${diagramType}">${svgContent}</div>
+              <div id="modal_${diagramType}" class="modal-tbk">
+                <div class="modal-content-tbk">
+                  <span class="close-tbk-${diagramType}">&times;</span>
+                  <div id="modalSvgContainer_${diagramType}">${svgContent}</div>
                 </div>
               </div>
-    
+              <script src="https://unpkg.com/@panzoom/panzoom@4.6.0/dist/panzoom.min.js"><\/script>
+              <script>
+                document.addEventListener("DOMContentLoaded", () => {
+                  const svgContainer_${diagramType} = document.getElementById("modalSvgContainer_${diagramType}");
+                  const svgElement_${diagramType} = svgContainer_${diagramType}.querySelector("svg");
+
+                  const panzoomInstance_${diagramType} = Panzoom(svgElement_${diagramType}, {
+                      maxScale: 50,
+                      minScale: 0.5,
+                      step: 0.1,
+                  });
+
+                  document.getElementById("modal_${diagramType}").addEventListener("wheel", (event) => {
+                      panzoomInstance_${diagramType}.zoomWithWheel(event);
+                  }, { passive: false });
+                  
+                  document.getElementById("svgContainer_${diagramType}").addEventListener("click", function() {
+                    document.getElementById("modal_${diagramType}").style.display = "flex";
+                  });
+
+                  document.querySelector(".close-tbk-${diagramType}").addEventListener("click", function() {
+                    document.getElementById("modal_${diagramType}").style.display = "none";
+                  });
+
+                  document.getElementById("modal_${diagramType}").addEventListener("click", function(event) {
+                    if (event.target === this) {
+                      this.style.display = "none";
+                    }
+                  });
+                });
+              <\/script>
             `;
 
-            console.log(html);
+            // Crear un Blob con el contenido HTML
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
 
+            // Crear un enlace de descarga y hacer clic en él
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = filename;  // Puedes cambiar esto si quieres usar otro nombre de archivo
+            a.click();
 
-           /* navigator.clipboard.writeText(svgContent).then(function() {
-                alert("Macro HTML copiado al portapapeles.");
-            }).catch(function() {
-                alert("Error al copiar al portapapeles.");
-            });*/
+            // Limpiar el URL objeto
+            URL.revokeObjectURL(url);
         });
 
     </script>
